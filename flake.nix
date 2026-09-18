@@ -8,9 +8,11 @@
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    noctalia.url = "github:noctalia-dev/noctalia";
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }: {
+  outputs = inputs@{ self, nixpkgs, home-manager, ... }: {
     nixosConfigurations.personal-laptop-nixos = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
 
@@ -18,6 +20,12 @@
         ./hosts/personal-laptop-nixos/configuration.nix
 
         home-manager.nixosModules.home-manager
+
+        {
+          home-manager.extraSpecialArgs = {
+            inherit inputs;
+          };
+        }
       ];
     };
   };
