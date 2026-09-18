@@ -8,6 +8,7 @@
       ../../modules/desktop.nix
       ../../modules/niri.nix
       ../../modules/maintenance.nix
+      ../../modules/wireguard.nix
     ];
 
   boot.loader.systemd-boot = {
