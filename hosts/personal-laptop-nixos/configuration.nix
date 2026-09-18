@@ -9,6 +9,7 @@
       ../../modules/niri.nix
       ../../modules/maintenance.nix
       ../../modules/wireguard.nix
+      ../../modules/ssh.nix
     ];
 
   boot.loader.systemd-boot = {
@@ -22,13 +23,16 @@
 
   networking.hostName = "personal-laptop-nixos";
   
-  users.users."remarka" = {
+  users.users.remarka = {
     isNormalUser = true;
     description = "Elena Stroiu";
-    extraGroups = [ "networkmanager" "wheel" ];
-    packages = with pkgs; [
-    #  thunderbird
+
+    extraGroups = [
+      "networkmanager"
+      "wheel"
     ];
+
+    shell = pkgs.fish;
   };
 
   home-manager = {

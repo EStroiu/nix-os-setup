@@ -38,7 +38,7 @@ binds {
     // ============================================================
 
     Mod+Return hotkey-overlay-title="Open Terminal" {
-        spawn "alacritty";
+        spawn "kitty";
     }
 
     Mod+Space hotkey-overlay-title="Application Launcher" {
