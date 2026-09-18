@@ -63,17 +63,8 @@
       rebuild = "sudo nixos-rebuild switch --flake ~/nixos-config#personal-laptop-nixos";
     };
   };
-
-  # Bash terminal enabled as fallback
-  programs.bash = {
-    enable = true;
-
-    shellAliases = {
-      ll = "ls -lah";
-      gs = "git status";
-    };
-  };
-
+ 
+  # Git
   programs.git = {
     enable = true;
   };

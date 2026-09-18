@@ -1,21 +1,19 @@
 { pkgs, ... }:
 
 {
-  # Enable the Niri Wayland compositor.
   programs.niri.enable = true;
 
-  # Authorization dialogs used by desktop applications.
+  # When Niri is launched through greetd/niri-session,
+  # let it inherit the complete user environment/PATH.
+  systemd.user.services.niri.enableDefaultPath = false;
+
+  # Authorization prompts.
   security.polkit.enable = true;
 
-  # Secret/keyring service.
+  # Secret/keyring service for desktop applications.
   services.gnome.gnome-keyring.enable = true;
 
-  hardware.bluetooth.enable = true;
-
-  services.upower.enable = true;
-  services.power-profiles-daemon.enable = true;
-
-  # Needed for older X11 applications and games.
+  # X11 compatibility for applications that do not support Wayland.
   environment.systemPackages = with pkgs; [
     xwayland-satellite
   ];

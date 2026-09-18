@@ -1,0 +1,25 @@
+# Nix build outputs
+result
+result-*
+
+# direnv / nix-direnv
+.direnv/
+
+# Local environment files / secrets
+.env
+.env.*
+!.env.example
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Local machine-specific scratch files
+*.local

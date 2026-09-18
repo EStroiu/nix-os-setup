@@ -1,20 +1,24 @@
-{ ... }:
+{ config, pkgs, ... }:
 
 {
-  # GNOME desktop
-  services.displayManager.gdm.enable = true;
-  services.desktopManager.gnome.enable = true;
+  # Lightweight login manager.
+  #
+  # tuigreet handles authentication and then starts Niri.
+  services.greetd = {
+    enable = true;
 
-  # Keyboard layout
-  services.xserver.xkb = {
-    layout = "us";
-    variant = "";
+    settings = {
+      default_session = {
+        command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --asterisks --cmd ${config.programs.niri.package}/bin/niri-session";
+        user = "greeter";
+      };
+    };
   };
 
-  # Printing
+  # Printing.
   services.printing.enable = true;
 
-  # Audio
+  # Audio.
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;
 
@@ -25,6 +29,6 @@
     pulse.enable = true;
   };
 
-  # GUI applications
+  # Browser.
   programs.firefox.enable = true;
 }
