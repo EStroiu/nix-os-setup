@@ -22,6 +22,13 @@
     ];
   };
 
+  home-manager = {
+    useGlobalPkgs = true;
+    useUserPackages = true;
+
+    users.remarka = import ../../home/remarka/home.nix;
+  };
+
   system.stateVersion = "26.05";
 
 }
