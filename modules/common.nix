@@ -1,13 +1,16 @@
 { pkgs, ... }:
 
 {
+  # Enable modern Nix commands and flakes.
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
   ];
 
+  # Networking available on all machines.
   networking.networkmanager.enable = true;
 
+  # Regional settings.
   time.timeZone = "Europe/Amsterdam";
 
   i18n.defaultLocale = "en_US.UTF-8";
@@ -26,17 +29,11 @@
 
   nixpkgs.config.allowUnfree = true;
 
+  # Keep a few basic recovery/admin tools available system-wide.
   environment.systemPackages = with pkgs; [
     git
     vim
     curl
     wget
-    ripgrep
-    fd
-    tree
-    htop
-    jq
-    unzip
-    zip
   ];
 }

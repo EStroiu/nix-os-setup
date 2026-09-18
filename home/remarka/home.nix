@@ -4,8 +4,6 @@
   home.username = "remarka";
   home.homeDirectory = "/home/remarka";
 
-  # Like system.stateVersion, don't change this later just because
-  # you upgrade Home Manager/NixOS.
   home.stateVersion = "26.05";
 
   programs.home-manager.enable = true;
@@ -19,7 +17,23 @@
     };
   };
 
+  programs.git = {
+    enable = true;
+  };
+
   home.packages = with pkgs; [
+    # CLI utilities
+    ripgrep
+    fd
+    tree
+    htop
+    jq
+
+    # Archives
+    unzip
+    zip
+
+    # System information
     fastfetch
   ];
 }
