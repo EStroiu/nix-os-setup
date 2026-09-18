@@ -7,9 +7,16 @@
       ../../modules/common.nix
       ../../modules/desktop.nix
       ../../modules/niri.nix
+      ../../modules/maintenance.nix
     ];
 
-  boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot = {
+    enable = true;
+
+    # Keep only the 5 newest NixOS generations in the boot menu.
+    configurationLimit = 5;
+  };
+
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking.hostName = "personal-laptop-nixos";
