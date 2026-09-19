@@ -1,7 +1,12 @@
 { pkgs, inputs, ... }:
 
+let
+  # Cursor configuration.
+  # Change these values here and both GTK/X11 and Niri will use them.
+  cursorTheme = "Bibata-Modern-Classic";
+  cursorSize = 20;
+in
 {
-
   imports = [
     inputs.noctalia.homeModules.default
   ];
@@ -12,10 +17,37 @@
 
   programs.home-manager.enable = true;
 
-  xdg.configFile."niri/config.kdl".source = ./niri/config.kdl;
-  xdg.configFile."noctalia/config.toml".source = ./noctalia/config.toml;
 
-  # Global setting
+  # ============================================================
+  # Configuration files
+  # ============================================================
+
+  # Niri config.
+  #
+  # The source config.kdl contains @CURSOR_THEME@ and
+  # @CURSOR_SIZE@ placeholders. Home Manager replaces them with
+  # the cursor values defined above.
+  xdg.configFile."niri/config.kdl".text =
+    builtins.replaceStrings
+      [
+        "@CURSOR_THEME@"
+        "@CURSOR_SIZE@"
+      ]
+      [
+        cursorTheme
+        (toString cursorSize)
+      ]
+      (builtins.readFile ./niri/config.kdl);
+
+  # Noctalia config.
+  xdg.configFile."noctalia/config.toml".source =
+    ./noctalia/config.toml;
+
+
+  # ============================================================
+  # GTK
+  # ============================================================
+
   gtk = {
     enable = true;
 
@@ -25,8 +57,12 @@
       size = 12;
     };
   };
-  
-  # Global font
+
+
+  # ============================================================
+  # Fonts
+  # ============================================================
+
   fonts.fontconfig = {
     enable = true;
 
@@ -35,18 +71,28 @@
       sansSerif = [ "JetBrains Mono" ];
     };
   };
-  
-  # Mouse Cursor
+
+
+  # ============================================================
+  # Mouse cursor
+  #
+  # cursorTheme and cursorSize are defined at the top of this file.
+  # ============================================================
+
   home.pointerCursor = {
     package = pkgs.bibata-cursors;
-    name = "Bibata-Modern-Classic";
-    size = 20;
-  
+    name = cursorTheme;
+    size = cursorSize;
+
     gtk.enable = true;
     x11.enable = true;
   };
 
+
+  # ============================================================
   # Kitty terminal
+  # ============================================================
+
   programs.kitty = {
     enable = true;
 
@@ -70,7 +116,11 @@
     };
   };
 
-  # Better look for the terminal with Starship
+
+  # ============================================================
+  # Starship prompt
+  # ============================================================
+
   programs.starship = {
     enable = true;
     enableZshIntegration = true;
@@ -78,7 +128,7 @@
     settings = {
       add_newline = false;
 
-      line_break.disabled = true;      
+      line_break.disabled = true;
 
       character = {
         success_symbol = "[❯](bold green)";
@@ -87,7 +137,11 @@
     };
   };
 
-  # ZSH
+
+  # ============================================================
+  # Zsh
+  # ============================================================
+
   programs.zsh = {
     enable = true;
 
@@ -117,20 +171,38 @@
     shellAliases = {
       ll = "ls -lah";
       gs = "git status";
-      rebuild = "sudo nixos-rebuild switch --flake ~/nixos-config#personal-laptop-nixos";
+
+      rebuild =
+        "sudo nixos-rebuild switch --flake ~/nixos-config#personal-laptop-nixos";
     };
   };
- 
+
+
+  # ============================================================
   # Git
+  # ============================================================
+
   programs.git = {
     enable = true;
   };
 
-  # Stuff for Niri
-  programs.swaylock.enable = true; # screen lock
+
+  # ============================================================
+  # Niri / desktop
+  # ============================================================
+
+  # Screen locking.
+  programs.swaylock.enable = true;
+
+  # Desktop shell.
   programs.noctalia = {
     enable = true;
   };
+
+
+  # ============================================================
+  # User packages
+  # ============================================================
 
   home.packages = with pkgs; [
     # CLI utilities
