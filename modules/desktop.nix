@@ -15,6 +15,13 @@
     };
   };
 
+  # File explorer
+  environment.systemPackages = with pkgs; [
+    nautilus
+    adwaita-icon-theme
+  ];
+  services.gvfs.enable = true;
+
   # Power and Battery
   services.upower.enable = true;
   services.power-profiles-daemon.enable = true;
