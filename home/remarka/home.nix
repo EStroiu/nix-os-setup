@@ -39,13 +39,15 @@
     };
   };
 
-  # Better look for the terminal
+  # Better look for the terminal with Starship
   programs.starship = {
     enable = true;
-    enableFishIntegration = true;
+    enableZshIntegration = true;
 
     settings = {
       add_newline = false;
+
+      line_break.disabled = true;      
 
       character = {
         success_symbol = "[❯](bold green)";
@@ -54,9 +56,32 @@
     };
   };
 
-  # Fish terminal
-  programs.fish = {
+  # ZSH
+  programs.zsh = {
     enable = true;
+
+    enableCompletion = true;
+
+    autosuggestion = {
+      enable = true;
+      strategy = [ "history" ];
+    };
+
+    syntaxHighlighting.enable = true;
+
+    history = {
+      size = 10000;
+      save = 10000;
+      share = true;
+      ignoreDups = true;
+      ignoreSpace = true;
+    };
+
+    historySubstringSearch = {
+      enable = true;
+      searchUpKey = [ "^[[A" ];
+      searchDownKey = [ "^[[B" ];
+    };
 
     shellAliases = {
       ll = "ls -lah";
