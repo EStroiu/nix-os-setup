@@ -1,3 +1,6 @@
+[backdrop]
+enabled = true
+
 [bar.default]
 background_opacity = 0.0
 capsule = true
@@ -5,12 +8,12 @@ capsule_fill = "surface"
 capsule_padding = 9.0
 capsule_thickness = 0.79999998584389687
 center = [ "clock", "date" ]
-end = [ "network", "bluetooth", "volume", "brightness", "battery", "control-center", "session" ]
+end = [ "network", "bluetooth", "volume", "brightness", "battery", "session" ]
 font_family = "JetBrains Mono"
 font_scale = 1.0499999839812517
 scale = 1.0500000081956387
 shadow = false
-start = [ "launcher", "wallpaper", "cpu", "ram", "workspaces" ]
+start = [ "launcher", "cpu", "ram", "workspaces" ]
 thickness = 35
 widget_spacing = 10
 
@@ -82,6 +85,7 @@ popup_shadows = false
     [shell.panel]
     clipboard_placement = "attached"
     control_center_placement = "floating"
+    session_placement = "floating"
     shadow = false
 
     [shell.shadow]
@@ -124,7 +128,8 @@ transition_on_startup = true
 capsule_radius = 8
 
 [widget.control-center]
-enabled = false
+enabled = true
 
 [widget.session]
+capsule = true
 capsule_radius = 8
