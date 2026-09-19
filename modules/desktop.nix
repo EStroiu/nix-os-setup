@@ -15,6 +15,10 @@
     };
   };
 
+  # Power and Battery
+  services.upower.enable = true;
+  services.power-profiles-daemon.enable = true;
+
   # Printing.
   services.printing.enable = true;
 

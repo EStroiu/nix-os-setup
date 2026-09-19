@@ -13,6 +13,7 @@
   programs.home-manager.enable = true;
 
   xdg.configFile."niri/config.kdl".source = ./niri/config.kdl;
+  xdg.configFile."noctalia/config.toml".source = ./noctalia/config.toml;
 
   # Kitty terminal
   programs.kitty = {

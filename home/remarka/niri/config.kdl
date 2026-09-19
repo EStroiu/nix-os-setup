@@ -29,8 +29,9 @@ layout {
 spawn-at-startup "noctalia"
 
 hotkey-overlay {
+    skip-at-startup
+    hide-not-bound
 }
-
 
 binds {
     // ============================================================
