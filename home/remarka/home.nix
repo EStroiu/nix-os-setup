@@ -15,6 +15,27 @@
   xdg.configFile."niri/config.kdl".source = ./niri/config.kdl;
   xdg.configFile."noctalia/config.toml".source = ./noctalia/config.toml;
 
+  # Global setting
+  gtk = {
+    enable = true;
+
+    font = {
+      name = "JetBrains Mono";
+      package = pkgs.jetbrains-mono;
+      size = 12;
+    };
+  };
+  
+  # Global font
+  fonts.fontconfig = {
+    enable = true;
+
+    defaultFonts = {
+      monospace = [ "JetBrains Mono" ];
+      sansSerif = [ "JetBrains Mono" ];
+    };
+  };
+
   # Kitty terminal
   programs.kitty = {
     enable = true;
