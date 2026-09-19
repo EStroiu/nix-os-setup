@@ -1,3 +1,37 @@
+[bar.default]
+background_opacity = 0.0
+capsule = true
+capsule_fill = "surface"
+capsule_padding = 9.0
+capsule_thickness = 0.79999998584389687
+center = [ "clock", "date" ]
+end = [ "network", "bluetooth", "volume", "brightness", "battery", "control-center", "session" ]
+font_family = "JetBrains Mono"
+font_scale = 1.0499999839812517
+scale = 1.0500000081956387
+shadow = false
+start = [ "launcher", "wallpaper", "cpu", "ram", "workspaces" ]
+thickness = 35
+widget_spacing = 10
+
+[desktop_widgets]
+enabled = false
+schema_version = 2
+widget_order = []
+
+    [desktop_widgets.grid]
+    cell_size = 16
+    major_interval = 4
+    visible = true
+
+    [desktop_widgets.widget]
+
+[dock]
+shadow = false
+
+[location]
+auto_locate = true
+
 [lockscreen_widgets]
 enabled = false
 schema_version = 2
@@ -35,22 +69,57 @@ widget_order = [ "lockscreen-login-box@eDP-1" ]
         show_unlock_hint = true
         show_weather = true
 
+[shell]
+font_family = "JetBrains Mono"
+lang = "en"
+popup_shadows = false
+
+    [shell.panel]
+    clipboard_placement = "attached"
+    control_center_placement = "floating"
+    shadow = false
+
+    [shell.shadow]
+    alpha = 0.0
+
 [theme]
 builtin = "Dracula"
 community_palette = "ADW"
 mode = "dark"
+pure_black_dark = true
 source = "community"
 wallpaper_scheme = "m3-fruit-salad"
-pure_black_dark = true
 
-[wallpaper.default]
-path = "/nix/store/ma10nhgvri1y6pdl5vj4yn5j909xvdly-noctalia-5.1.0/share/noctalia/assets/noctalia-wallpaper.png"
+[wallpaper]
+transition = [ "honeycomb" ]
+transition_on_startup = true
 
-[wallpaper.last]
-path = "/nix/store/ma10nhgvri1y6pdl5vj4yn5j909xvdly-noctalia-5.1.0/share/noctalia/assets/noctalia-wallpaper.png"
+    [wallpaper.default]
+    path = "/home/remarka/Pictures/nix_os_1.png"
 
-[[wallpaper.favorite]]
-builtin_palette = "Ayu"
-palette_source = "builtin"
-path = "/nix/store/ma10nhgvri1y6pdl5vj4yn5j909xvdly-noctalia-5.1.0/share/noctalia/assets/noctalia-wallpaper.png"
-theme_mode = "dark"
+    [wallpaper.last]
+    path = "/home/remarka/Pictures/nix_os_1.png"
+
+    [wallpaper.monitors.eDP-1]
+    path = "/home/remarka/Pictures/nix_os_1.png"
+
+    [[wallpaper.favorite]]
+    builtin_palette = "Ayu"
+    palette_source = "builtin"
+    path = "/nix/store/ma10nhgvri1y6pdl5vj4yn5j909xvdly-noctalia-5.1.0/share/noctalia/assets/noctalia-wallpaper.png"
+    theme_mode = "dark"
+
+    [[wallpaper.favorite]]
+    community_palette = "ADW"
+    palette_source = "community"
+    path = "/home/remarka/Pictures/nix_os_1.png"
+    theme_mode = "dark"
+
+[widget.clipboard]
+capsule_radius = 8
+
+[widget.control-center]
+enabled = false
+
+[widget.session]
+capsule_radius = 8
