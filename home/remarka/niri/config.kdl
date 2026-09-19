@@ -35,6 +35,36 @@ hotkey-overlay {
     hide-not-bound
 }
 
+// ================================================================
+// Window appearance
+// ================================================================
+
+// Match Noctalia's rounded appearance.
+//
+// geometry-corner-radius also rounds Niri's focus ring/border.
+// clip-to-geometry makes the actual window content follow the radius.
+window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
+
+// ================================================================
+// Noctalia bar
+// ================================================================
+
+// Keep the Noctalia bar genuinely transparent.
+// No blur, xray or compositor-added noise.
+layer-rule {
+    match namespace="^noctalia-bar-.*$"
+
+    background-effect {
+        blur false
+        xray false
+        noise 0
+        saturation 1
+    }
+}
 
 binds {
     // ============================================================
