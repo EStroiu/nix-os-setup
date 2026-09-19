@@ -13,29 +13,32 @@ input {
 
 
 // ================================================================
-// Layout
+// Startup
 // ================================================================
 
-layout {
-    // Heights cycled by Super+Shift+R.
-    preset-window-heights {
-        proportion 0.33333
-        proportion 0.5
-        proportion 0.66667
-    }
-}
-
-
 spawn-at-startup "noctalia"
+
+
+// ================================================================
+// Screenshots
+// ================================================================
+
+screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
+
+
+// ================================================================
+// Hotkey help
+// ================================================================
 
 hotkey-overlay {
     skip-at-startup
     hide-not-bound
 }
 
+
 binds {
     // ============================================================
-    // Applications / Noctalia
+    // Applications
     // ============================================================
 
     Mod+Return hotkey-overlay-title="Open Terminal" {
@@ -48,10 +51,6 @@ binds {
 
     Mod+S hotkey-overlay-title="Control Center" {
         spawn "noctalia" "msg" "panel-toggle" "control-center";
-    }
-
-    Mod+Shift+Comma hotkey-overlay-title="Noctalia Settings" {
-        spawn "noctalia" "msg" "settings-toggle";
     }
 
     Alt+Tab hotkey-overlay-title="Window Switcher" {
@@ -67,12 +66,33 @@ binds {
         show-hotkey-overlay;
     }
 
-    Mod+O repeat=false hotkey-overlay-title="Open / Close Overview" {
+    Mod+O repeat=false hotkey-overlay-title="Overview" {
         toggle-overview;
     }
 
     Mod+Q repeat=false hotkey-overlay-title="Close Window" {
         close-window;
+    }
+
+
+    // ============================================================
+    // Screenshots
+    //
+    // Print      = interactively select an area
+    // Ctrl+Print = current monitor
+    // Alt+Print  = current window
+    // ============================================================
+
+    Print hotkey-overlay-title="Screenshot Area" {
+        screenshot show-pointer=false;
+    }
+
+    Ctrl+Print hotkey-overlay-title="Screenshot Monitor" {
+        screenshot-screen show-pointer=false;
+    }
+
+    Alt+Print hotkey-overlay-title="Screenshot Window" {
+        screenshot-window show-pointer=false;
     }
 
 
@@ -102,11 +122,10 @@ binds {
 
 
     // ============================================================
-    // Navigation inside the current workspace
+    // Focus
     //
-    // Super + Left/Right = move focus between columns
-    // Super + Up/Down    = move focus between vertically stacked
-    //                      windows inside the current column
+    // Left / Right = neighbouring columns
+    // Up / Down    = stacked windows inside current column
     // ============================================================
 
     Mod+Left hotkey-overlay-title="Focus Column Left" {
@@ -117,25 +136,21 @@ binds {
         focus-column-right;
     }
 
-    Mod+Up hotkey-overlay-title="Focus Window Above in Column" {
+    Mod+Up hotkey-overlay-title="Focus Window Above" {
         focus-window-up;
     }
 
-    Mod+Down hotkey-overlay-title="Focus Window Below in Column" {
+    Mod+Down hotkey-overlay-title="Focus Window Below" {
         focus-window-down;
     }
 
 
     // ============================================================
-    // Move columns / windows
+    // Move
     //
-    // Super+Ctrl+Left/Right = move whole column
-    // Super+Ctrl+Up/Down    = reorder stacked windows vertically
+    // Ctrl+Left/Right = move whole column
+    // Ctrl+Up/Down    = reorder windows inside a stacked column
     // ============================================================
-
-    Mod+Shift+H hotkey-overlay-title="Set Window Full Height" {
-        set-window-height "100%";
-    }
 
     Mod+Ctrl+Left hotkey-overlay-title="Move Column Left" {
         move-column-left;
@@ -145,67 +160,71 @@ binds {
         move-column-right;
     }
 
-    Mod+Ctrl+Up hotkey-overlay-title="Move Window Up in Column" {
+    Mod+Ctrl+Up hotkey-overlay-title="Move Window Up" {
         move-window-up;
     }
 
-    Mod+Ctrl+Down hotkey-overlay-title="Move Window Down in Column" {
+    Mod+Ctrl+Down hotkey-overlay-title="Move Window Down" {
         move-window-down;
     }
 
 
     // ============================================================
-    // Stack multiple windows inside one column
+    // Move windows between columns
     //
-    // Super+, = consume window into current column
-    // Super+. = expel window back into its own column
+    // If the focused window is stacked with another window,
+    // this expels it into its own column.
+    //
+    // If it is already alone, this consumes it into the
+    // neighbouring column.
     // ============================================================
 
-    Mod+Comma hotkey-overlay-title="Add Window to Current Column" {
-        consume-window-into-column;
+    Mod+Shift+Left hotkey-overlay-title="Move Window Into / Out Left" {
+        consume-or-expel-window-left;
     }
 
-    Mod+Period hotkey-overlay-title="Remove Window from Column" {
-        expel-window-from-column;
+    Mod+Shift+Right hotkey-overlay-title="Move Window Into / Out Right" {
+        consume-or-expel-window-right;
     }
 
 
     // ============================================================
-    // Window height
+    // Window / column sizing
     //
-    // Super+H          = immediately make selected window 50%
-    // Super+Shift+Up   = increase height by 10%
-    // Super+Shift+Down = decrease height by 10%
-    // Super+Shift+R    = cycle 1/3 -> 1/2 -> 2/3
-    // Super+Ctrl+R     = reset automatic height
+    // H = Height
+    // W = Width
+    //
+    // Super+H       = half height
+    // Super+Shift+H = full height
+    //
+    // Super+W       = half width
+    // Super+Shift+W = full width
     // ============================================================
 
-    Mod+H hotkey-overlay-title="Set Window to Half Height" {
+    Mod+H hotkey-overlay-title="Half Height" {
         set-window-height "50%";
     }
 
-    Mod+Shift+Up hotkey-overlay-title="Make Window Taller" {
-        set-window-height "+10%";
+    Mod+Shift+H hotkey-overlay-title="Full Height" {
+        set-window-height "100%";
     }
 
-    Mod+Shift+Down hotkey-overlay-title="Make Window Shorter" {
-        set-window-height "-10%";
+    Mod+W hotkey-overlay-title="Half Width" {
+        set-column-width "50%";
     }
 
-    Mod+Shift+R hotkey-overlay-title="Cycle Window Height" {
-        switch-preset-window-height;
-    }
-
-    Mod+Ctrl+R hotkey-overlay-title="Reset Window Height" {
-        reset-window-height;
+    Mod+Shift+W hotkey-overlay-title="Full Width" {
+        maximize-column;
     }
 
 
     // ============================================================
     // Workspaces
     //
-    // Alt separates workspace movement from movement inside
-    // a stacked column.
+    // Alt+Up/Down = navigate workspaces
+    //
+    // Ctrl+Alt+Up/Down = move the entire current column,
+    // including vertically stacked windows, to another workspace.
     // ============================================================
 
     Mod+Alt+Up hotkey-overlay-title="Workspace Up" {
@@ -225,151 +244,12 @@ binds {
     }
 
 
-    // Direct workspace selection
-
-    Mod+1 {
-        focus-workspace 1;
-    }
-
-    Mod+2 {
-        focus-workspace 2;
-    }
-
-    Mod+3 {
-        focus-workspace 3;
-    }
-
-    Mod+4 {
-        focus-workspace 4;
-    }
-
-    Mod+5 {
-        focus-workspace 5;
-    }
-
-    Mod+6 {
-        focus-workspace 6;
-    }
-
-    Mod+7 {
-        focus-workspace 7;
-    }
-
-    Mod+8 {
-        focus-workspace 8;
-    }
-
-    Mod+9 {
-        focus-workspace 9;
-    }
-
-
-    // Move the whole current column to a workspace
-
-    Mod+Ctrl+1 {
-        move-column-to-workspace 1;
-    }
-
-    Mod+Ctrl+2 {
-        move-column-to-workspace 2;
-    }
-
-    Mod+Ctrl+3 {
-        move-column-to-workspace 3;
-    }
-
-    Mod+Ctrl+4 {
-        move-column-to-workspace 4;
-    }
-
-    Mod+Ctrl+5 {
-        move-column-to-workspace 5;
-    }
-
-    Mod+Ctrl+6 {
-        move-column-to-workspace 6;
-    }
-
-    Mod+Ctrl+7 {
-        move-column-to-workspace 7;
-    }
-
-    Mod+Ctrl+8 {
-        move-column-to-workspace 8;
-    }
-
-    Mod+Ctrl+9 {
-        move-column-to-workspace 9;
-    }
-
-
     // ============================================================
-    // Multiple monitors
-    //
-    // Optimised for the common laptop setup where an external
-    // monitor is to the left or right.
+    // Fullscreen
     // ============================================================
 
-    Mod+Shift+Left hotkey-overlay-title="Focus Monitor Left" {
-        focus-monitor-left;
-    }
-
-    Mod+Shift+Right hotkey-overlay-title="Focus Monitor Right" {
-        focus-monitor-right;
-    }
-
-    Mod+Ctrl+Shift+Left hotkey-overlay-title="Move Column to Monitor Left" {
-        move-column-to-monitor-left;
-    }
-
-    Mod+Ctrl+Shift+Right hotkey-overlay-title="Move Column to Monitor Right" {
-        move-column-to-monitor-right;
-    }
-
-
-    // ============================================================
-    // Column layout
-    // ============================================================
-
-    Mod+M hotkey-overlay-title="Maximize Window to Full Height" {
-        maximize-window-to-edges;
-    }
-
-    Mod+F hotkey-overlay-title="Maximize Column" {
-        maximize-column;
-    }
-
-    Mod+R hotkey-overlay-title="Cycle Column Width" {
-        switch-preset-column-width;
-    }
-
-    Mod+C hotkey-overlay-title="Center Column" {
-        center-column;
-    }
-
-    Mod+Minus hotkey-overlay-title="Make Column Narrower" {
-        set-column-width "-10%";
-    }
-
-    Mod+Equal hotkey-overlay-title="Make Column Wider" {
-        set-column-width "+10%";
-    }
-
-
-    // ============================================================
-    // Fullscreen / floating
-    // ============================================================
-
-    Mod+Shift+F hotkey-overlay-title="Toggle Fullscreen" {
+    Mod+F hotkey-overlay-title="Toggle Fullscreen" {
         fullscreen-window;
-    }
-
-    Mod+V hotkey-overlay-title="Toggle Floating Window" {
-        toggle-window-floating;
-    }
-
-    Mod+Shift+V hotkey-overlay-title="Switch Floating / Tiled Focus" {
-        switch-focus-between-floating-and-tiling;
     }
 
 
