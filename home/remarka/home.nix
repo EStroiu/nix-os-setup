@@ -218,7 +218,8 @@ in
     # System information
     fastfetch
     
-    # File editor
+    # File editors
     kdePackages.kate
+    joplin-desktop
   ];
 }
