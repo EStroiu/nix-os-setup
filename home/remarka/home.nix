@@ -134,10 +134,28 @@ in
       # Don't copy automatically just by selecting text.
       "copy-on-select" = false;
       
-      # Force Ctrl+Shift+C to copy plain text only.
       keybind = [
+        # Clipboard
         "ctrl+shift+c=copy_to_clipboard:plain"
         "ctrl+shift+v=paste_from_clipboard"
+      
+        # Create splits
+        "ctrl+shift+right=new_split:right"
+        "ctrl+shift+down=new_split:down"
+      
+        # Navigate between splits
+        "ctrl+alt+left=goto_split:left"
+        "ctrl+alt+right=goto_split:right"
+        "ctrl+alt+up=goto_split:up"
+        "ctrl+alt+down=goto_split:down"
+
+        # Shell command-line navigation
+        "alt+left=esc:b"
+        "alt+right=esc:f"
+        "alt+d=esc:d"      
+
+        # Close currently focused split
+        "ctrl+shift+w=close_surface"
       ];
  
       # Better compatibility when SSHing to HPC/remote systems.
