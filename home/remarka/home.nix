@@ -218,5 +218,8 @@ in
 
     # System information
     fastfetch
+    
+    # File editor
+    kdePackages.kate
   ];
 }
