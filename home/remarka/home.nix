@@ -50,14 +50,13 @@ in
 
   gtk = {
     enable = true;
-
+  
     font = {
       name = "JetBrains Mono";
       package = pkgs.jetbrains-mono;
       size = 12;
     };
   };
-
 
   # ============================================================
   # Fonts

@@ -15,6 +15,12 @@
     };
   };
 
+
+  # NixOS enables Speech Dispatcher by default for graphical
+  # desktop sessions. We do not use a screen reader, and it was
+  # causing unwanted audio feedback while typing.
+  services.speechd.enable = false;
+
   # File explorer
   environment.systemPackages = with pkgs; [
     nautilus
