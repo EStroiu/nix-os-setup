@@ -86,34 +86,65 @@ in
     x11.enable = true;
   };
 
-
   # ============================================================
-  # Kitty terminal
+  # Ghostty terminal
   # ============================================================
 
-  programs.kitty = {
+  programs.ghostty = {
     enable = true;
-
-    font = {
-      name = "JetBrains Mono";
-      package = pkgs.jetbrains-mono;
-      size = 12;
-    };
-
+  
+    enableZshIntegration = true;
+  
     settings = {
-      # Appearance
-      window_padding_width = 10;
-      background_opacity = 0.95;
+      # Font
+      "font-family" = "JetBrains Mono";
+      "font-size" = 12;
+      
+      # Do not show box with the current size
+      "resize-overlay" = "never";
+   
+      # Use Catppuccin for the ANSI/application colour palette,
+      # but keep the terminal itself very dark and neutral.
+      theme = "Catppuccin Mocha";
+  
+      background = "0b0b0b";
+      foreground = "e6e6e6";
+  
+      "cursor-color" = "f2f2f2";
+      "cursor-text" = "0b0b0b";
+  
+      "selection-background" = "3a3a3a";
+      "selection-foreground" = "ffffff";
+  
+      # Similar appearance to the previous Kitty setup.
+      "background-opacity" = 0.95;
+  
+      "window-padding-x" = 10;
+      "window-padding-y" = 10;
+  
+      # History
+      "scrollback-limit" = 10000000;
+  
+      # No terminal bell.
+      "bell-features" = "no-audio,no-system";
+      
+      # Clipboard behaviour.
+      "clipboard-trim-trailing-spaces" = true;
 
-      # Behaviour
-      scrollback_lines = 10000;
-      enable_audio_bell = false;
-
-      # Don't ask for confirmation when closing a terminal window.
-      confirm_os_window_close = 0;
+      # Don't copy automatically just by selecting text.
+      "copy-on-select" = false;
+      
+      # Force Ctrl+Shift+C to copy plain text only.
+      keybind = [
+        "ctrl+shift+c=copy_to_clipboard:plain"
+        "ctrl+shift+v=paste_from_clipboard"
+      ];
+ 
+      # Better compatibility when SSHing to HPC/remote systems.
+      "shell-integration-features" =
+        "ssh-env,ssh-terminfo,sudo";
     };
-  };
-
+  };  
 
   # ============================================================
   # Starship prompt
