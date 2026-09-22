@@ -42,8 +42,7 @@ in
   # Noctalia config.
   xdg.configFile."noctalia/config.toml".source =
     ./noctalia/config.toml;
-
-
+  
   # ============================================================
   # GTK
   # ============================================================

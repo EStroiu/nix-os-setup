@@ -9,7 +9,16 @@
 
   # Networking available on all machines.
   networking.networkmanager.enable = true;
-
+ 
+  # Resolve .local hostnames using mDNS
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
+  
+  services.nscd.enableNsncd = false;
+  
   # Regional settings.
   time.timeZone = "Europe/Amsterdam";
 
