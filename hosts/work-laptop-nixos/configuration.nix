@@ -48,6 +48,8 @@
     '';
   };
 
+  boot.loader.timeout = 10;
+
   boot.loader.efi = {
     canTouchEfiVariables = true;
     efiSysMountPoint = "/boot";
