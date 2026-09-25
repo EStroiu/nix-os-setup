@@ -218,10 +218,18 @@ in
     shellAliases = {
       ll = "ls -lah";
       gs = "git status";
-
-      rebuild =
-        "sudo nixos-rebuild switch --flake ~/nixos-config#personal-laptop-nixos";
     };
+
+    initContent = ''
+      rebuild() {
+        sudo nixos-rebuild switch --flake "$HOME/nixos-config#$(hostname)"
+      }
+
+      rebuild-test() {
+        sudo nixos-rebuild build --flake "$HOME/nixos-config#$(hostname)"
+      }
+    '';
+
   };
 
 
