@@ -12,37 +12,30 @@
     noctalia.url = "github:noctalia-dev/noctalia";
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, ... }: {
-    nixosConfigurations.personal-laptop-nixos = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
+  outputs = inputs@{ self, nixpkgs, home-manager, ... }:
 
-      modules = [
-        ./hosts/personal-laptop-nixos/configuration.nix
+    let
+      mkHost = hostname:
+        nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
 
-        home-manager.nixosModules.home-manager
+          modules = [
+            ./hosts/${hostname}/configuration.nix
 
-        {
-          home-manager.extraSpecialArgs = {
-            inherit inputs;
-          };
-        }
-      ];
+            home-manager.nixosModules.home-manager
+
+            {
+              home-manager.extraSpecialArgs = {
+                inherit inputs;
+              };
+            }
+          ];
+        };
+    in
+    {
+      nixosConfigurations = {
+        personal-laptop-nixos = mkHost "personal-laptop-nixos";
+        work-laptop-nixos = mkHost "work-laptop-nixos";
+      };
     };
-
-    nixosConfigurations.work-laptop-nixos = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      
-      modules = [
-        ./hosts/work-laptop-nixos/configuration.nix
-
-        home-manager.nixosModules.home-manager
-
-        {
-          home-manager.extraSpecialArgs = {
-            inherit inputs;
-          };
-        }
-      ];
-    };
-  };
 }

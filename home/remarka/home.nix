@@ -219,14 +219,22 @@ in
       ll = "ls -lah";
       gs = "git status";
     };
-
+    
     initContent = ''
       rebuild() {
-        sudo nixos-rebuild switch --flake "$HOME/nixos-config#$(hostname)"
+        "$HOME/nixos-config/scripts/rebuild.sh" switch
       }
-
+    
       rebuild-test() {
-        sudo nixos-rebuild build --flake "$HOME/nixos-config#$(hostname)"
+        "$HOME/nixos-config/scripts/rebuild.sh" build
+      }
+    
+      rebuild-check() {
+        "$HOME/nixos-config/scripts/rebuild.sh" check
+      }
+    
+      rebuild-boot() {
+        "$HOME/nixos-config/scripts/rebuild.sh" boot
       }
     '';
 
