@@ -291,5 +291,11 @@ in
     # File editors
     kdePackages.kate
     joplin-desktop
+    
+    # Camera
+    guvcview
+    pavucontrol
+    v4l-utils
+
   ];
 }
