@@ -39,7 +39,7 @@
 
   boot.loader.systemd-boot = {
     enable = true;
-    configurationLimit = 2;
+    configurationLimit = 5;
 
     extraEntries."zfsbootmenu.conf" = ''
       title ZFSBootMenu - AlmaLinux / Ubuntu
