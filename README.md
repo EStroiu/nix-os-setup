@@ -1,22 +1,18 @@
 # NixOS Configuration
 
-Personal multi-machine NixOS configuration managed with **Nix flakes**, **Home Manager**, and Git.
+Personal multi-host NixOS configuration using:
 
-The main goal of this repository is to keep the configuration:
+- Nix flakes
+- Home Manager
+- reusable NixOS modules
+- host-specific hardware and boot configuration
+- Git as the source of truth
 
-* reproducible across machines;
-* easy to understand;
-* modular without excessive abstraction;
-* safe to change and roll back;
-* explicit about what belongs to the system, a particular machine, or the user.
-
-The repository should describe the desired state of the machines. Avoid making permanent system changes manually when they can reasonably be expressed here.
+The goal is to make machines feel the same where that makes sense, while keeping hardware, disks and boot configuration specific to each computer.
 
 ---
 
-## Repository layout
-
-The general structure is:
+# Repository structure
 
 ```text
 nixos-config/
@@ -26,965 +22,950 @@ nixos-config/
 ├── .gitignore
 │
 ├── hosts/
-│   └── <host>/
+│   ├── personal-laptop-nixos/
+│   │   ├── configuration.nix
+│   │   └── hardware-configuration.nix
+│   │
+│   └── work-laptop-nixos/
 │       ├── configuration.nix
 │       └── hardware-configuration.nix
 │
 ├── modules/
+│   ├── laptop.nix
 │   ├── common.nix
-│   └── <feature>.nix
+│   ├── desktop.nix
+│   ├── niri.nix
+│   ├── maintenance.nix
+│   ├── ssh.nix
+│   └── wireguard.nix
 │
-└── home/
-    └── <user>/
-        ├── home.nix
-        └── <component>/
-            └── ...
+├── home/
+│   └── remarka/
+│       ├── home.nix
+│       ├── niri/
+│       │   └── config.kdl
+│       └── noctalia/
+│           └── config.toml
+│
+└── scripts/
+    ├── rebuild.sh
+    └── new-host.sh
 ```
 
-The important ownership rule is:
+---
+
+# Configuration model
+
+The repository has three main configuration levels.
+
+## `hosts/`
+
+`hosts/` answers:
+
+> What is special about this physical computer?
+
+Each computer has its own directory:
 
 ```text
-flake.nix
-    dependencies and host definitions
-
-hosts/
-    configuration specific to one physical machine
-
-modules/
-    reusable NixOS/system configuration
-
-home/
-    user applications, preferences and dotfiles
+hosts/<hostname>/
+├── configuration.nix
+└── hardware-configuration.nix
 ```
+
+Host configuration should contain only things that genuinely depend on the machine, for example:
+
+- hostname
+- bootloader configuration
+- filesystem/storage configuration
+- ZFS configuration
+- encryption configuration
+- hardware-specific drivers or options
+- `networking.hostId`
+- `system.stateVersion`
+
+Do not put normal applications, shell preferences, terminal preferences or desktop preferences here.
+
+---
+
+## `modules/`
+
+`modules/` contains reusable NixOS system configuration.
+
+`modules/laptop.nix` is the shared laptop profile.
+
+It imports the common reusable modules and connects the shared Home Manager configuration.
+
+Conceptually:
+
+```text
+host
+ ↓
+modules/laptop.nix
+ ↓
+shared NixOS modules
+ +
+home/remarka/home.nix
+```
+
+A setting belongs in a reusable module when it is something that should normally apply to multiple machines.
+
+Examples:
+
+```text
+common system defaults
+desktop infrastructure
+Niri system support
+SSH service
+maintenance
+networking support
+VPN support
+```
+
+---
+
+## `home/remarka/`
+
+This is the shared user environment.
+
+It answers:
+
+> How should my account look and behave on every machine?
+
+Examples include:
+
+- user applications
+- shell configuration
+- shell aliases and functions
+- prompt configuration
+- terminal configuration
+- Git preferences
+- editor preferences
+- Niri keybindings
+- Noctalia configuration
+- cursor/theme preferences
+- user-level dotfiles
+
+Changes here should normally appear on every machine after pulling the repository and rebuilding.
 
 ---
 
 # Where should a change go?
 
-Use this as the main decision guide.
+| Change | Location |
+|---|---|
+| Hostname | `hosts/<host>/configuration.nix` |
+| Disk/filesystem setup | `hosts/<host>/configuration.nix` |
+| Generated filesystem/hardware detection | `hosts/<host>/hardware-configuration.nix` |
+| Bootloader | `hosts/<host>/configuration.nix` |
+| ZFS host ID | relevant host configuration |
+| Shared system service | `modules/` |
+| Shared desktop behavior | `modules/` |
+| User application | `home/remarka/home.nix` |
+| Shell configuration | `home/remarka/home.nix` |
+| Terminal configuration | `home/remarka/home.nix` |
+| Git configuration | `home/remarka/home.nix` |
+| Niri user config | `home/remarka/niri/` |
+| Noctalia user config | `home/remarka/noctalia/` |
+| External flake dependency | `flake.nix` |
+| Exact dependency revisions | `flake.lock` |
+| Secrets/private keys/passwords | **never plaintext in this repository** |
 
-| Change                                         | Where it belongs                                             |
-| ---------------------------------------------- | ------------------------------------------------------------ |
-| Hostname                                       | `hosts/<host>/configuration.nix`                             |
-| Bootloader                                     | `hosts/<host>/configuration.nix`                             |
-| Filesystems/disks detected during installation | `hosts/<host>/hardware-configuration.nix`                    |
-| Machine-specific hardware or driver setting    | `hosts/<host>/configuration.nix` or a host-specific module   |
-| Service wanted on several machines             | `modules/<feature>.nix`                                      |
-| Shared networking/system policy                | `modules/common.nix` or another reusable module              |
-| System-wide recovery/admin tool                | `modules/`                                                   |
-| User application                               | `home/<user>/home.nix`                                       |
-| Shell/editor/terminal/user preference          | `home/<user>/home.nix`                                       |
-| Application configuration file                 | `home/<user>/<component>/...`, deployed through Home Manager |
-| New external flake dependency                  | `flake.nix`                                                  |
-| Dependency versions                            | `flake.lock`, generated by Nix                               |
-| Password, private key, token or other secret   | **Do not store as plaintext in this repository**             |
-
-A useful rule of thumb is:
+A useful rule is:
 
 ```text
-Does the operating system need it?
-    → NixOS module
+Does only one physical machine need it?
+    → hosts/
 
-Does only the user need it?
-    → Home Manager
+Should all NixOS machines need it?
+    → modules/
 
-Does only one physical computer need it?
-    → hosts/<host>/
+Is it part of my personal environment?
+    → home/remarka/
 ```
 
 ---
 
-# `flake.nix`
+# Hosts in `flake.nix`
 
-`flake.nix` is the entry point.
+Hosts are declared explicitly.
 
-It defines:
-
-* Nixpkgs;
-* Home Manager;
-* other external flake inputs;
-* each NixOS machine managed by the repository.
-
-Each machine appears as a `nixosConfigurations` output.
-
-Conceptually:
+A helper avoids repeating the same NixOS/Home Manager setup:
 
 ```nix
-nixosConfigurations.<host> = nixpkgs.lib.nixosSystem {
-  system = "x86_64-linux";
+let
+  mkHost = hostname:
+    nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
 
-  modules = [
-    ./hosts/<host>/configuration.nix
-    home-manager.nixosModules.home-manager
-  ];
-};
+      modules = [
+        ./hosts/${hostname}/configuration.nix
+
+        home-manager.nixosModules.home-manager
+
+        {
+          home-manager.extraSpecialArgs = {
+            inherit inputs;
+          };
+        }
+      ];
+    };
+in
+{
+  nixosConfigurations = {
+    personal-laptop-nixos = mkHost "personal-laptop-nixos";
+    work-laptop-nixos = mkHost "work-laptop-nixos";
+  };
+}
 ```
 
-The actual host names are defined in the current `flake.nix`.
-
-If a new flake input must also be available inside Home Manager, pass it through `home-manager.extraSpecialArgs`.
-
----
-
-# `flake.lock`
-
-`flake.lock` records the exact revisions of the flake inputs.
-
-It should be committed to Git.
-
-Do not normally edit it manually.
-
-Update it with:
-
-```sh
-nix flake update
-```
-
-Keeping it in Git makes a configuration reproducible and makes dependency updates visible in history.
-
----
-
-# `hosts/`
-
-Each physical machine gets its own directory:
-
-```text
-hosts/<host>/
-├── configuration.nix
-└── hardware-configuration.nix
-```
-
-## `configuration.nix`
-
-This is the machine-level composition file.
-
-It normally contains things such as:
-
-```text
-imports
-hostname
-boot configuration
-user account
-host-specific hardware settings
-Home Manager integration
-system.stateVersion
-```
-
-Keep it relatively small.
-
-If a feature could reasonably be reused by another machine, prefer moving that functionality into `modules/` and importing it here.
-
-## `hardware-configuration.nix`
-
-This file is generated from the machine's detected hardware, disks and filesystems.
-
-It belongs to that physical machine and should be committed to Git.
-
-Never copy another machine's `hardware-configuration.nix` onto a new computer.
-
-A new machine should use the hardware configuration generated by its own NixOS installation.
-
----
-
-# `modules/`
-
-`modules/` contains reusable NixOS functionality.
-
-A module should normally represent a capability or coherent area of system configuration rather than one arbitrary setting.
-
-Examples of good module boundaries are:
-
-```text
-common system defaults
-desktop infrastructure
-networking
-remote access
-maintenance
-virtualisation
-development
-gaming
-work-specific services
-```
-
-Not every package needs its own module.
-
-If something is only a user application, it probably belongs in Home Manager instead.
-
-## `common.nix`
-
-`common.nix` should contain settings that are expected to apply to most or all machines.
-
-Typical examples are:
-
-```text
-Nix settings
-locale/timezone
-shared networking defaults
-package policy
-basic recovery tools
-common shell availability
-```
-
-Avoid putting hardware-specific configuration here.
-
----
-
-# `home/`
-
-Home Manager owns the user environment.
-
-The main file is:
-
-```text
-home/<user>/home.nix
-```
-
-Good candidates for Home Manager include:
-
-```text
-user applications
-shell configuration
-terminal configuration
-Git preferences
-fonts
-cursor/theme preferences
-CLI tools
-editor configuration
-desktop application preferences
-dotfiles
-```
-
-Application-specific configuration files can live next to `home.nix`, for example:
-
-```text
-home/<user>/
-├── home.nix
-├── editor/
-│   └── config
-└── desktop/
-    └── config
-```
-
-`home.nix` can then deploy those files using Home Manager facilities such as:
+Adding another normal x86-64 host therefore requires only:
 
 ```nix
-xdg.configFile
-home.file
-programs.<name>
-services.<name>
+new-host = mkHost "new-host";
 ```
 
-This keeps manually edited files under version control instead of modifying `~/.config` directly.
-
----
-
-# Adding software
-
-Before adding a package, decide whether it belongs to the **system** or the **user**.
-
-## User application
-
-For an application used by the normal desktop user, prefer Home Manager.
-
-A simple package can be added to:
-
-```nix
-home.packages = with pkgs; [
-  package-name
-];
-```
-
-If Home Manager has a dedicated module for that application, prefer the dedicated module when you want to configure it declaratively:
-
-```nix
-programs.example = {
-  enable = true;
-  # settings...
-};
-```
-
-## System package
-
-Use a NixOS module when the package is needed system-wide, for recovery, by system services, or before the user environment is available.
-
-For example:
-
-```nix
-environment.systemPackages = with pkgs; [
-  package-name
-];
-```
-
-## System service
-
-Services should normally be configured through NixOS options:
-
-```nix
-services.example.enable = true;
-```
-
-If the configuration is substantial or reusable, create:
+plus:
 
 ```text
-modules/example.nix
+hosts/new-host/
 ```
-
-and import it from the appropriate host.
 
 ---
 
-# Normal change workflow
+# Normal day-to-day workflow
 
 Enter the repository:
 
-```sh
+```bash
 cd ~/nixos-config
 ```
 
-Edit the relevant files.
+Edit files.
 
-Then stage the changes:
+Stage new files before using the flake:
 
-```sh
+```bash
 git add .
 ```
 
-This is important with Git-backed flakes.
+New files must be staged because the flake is evaluated from the Git source tree.
 
-A file that exists on disk but is untracked by Git may be invisible to Nix. If you create a new module and receive an error similar to:
+Check and build the current host:
 
-```text
-Path 'modules/example.nix' is not tracked by Git
+```bash
+rebuild-check
 ```
 
-run:
+Or only build:
 
-```sh
-git add .
+```bash
+rebuild-test
 ```
 
-Then check the full configuration:
+Apply immediately:
 
-```sh
-nix flake check
+```bash
+rebuild
 ```
 
-Build it without activating it:
+Install for the next boot without switching the running system:
 
-```sh
-sudo nixos-rebuild build --flake .#<host>
+```bash
+rebuild-boot
 ```
 
-If the build succeeds, apply it:
+After verifying the system:
 
-```sh
-sudo nixos-rebuild switch --flake .#<host>
-```
-
-After testing the change:
-
-```sh
+```bash
 git status
-git diff --cached
+git add .
 git commit -m "Describe the change"
 git push
 ```
 
-The normal workflow is therefore:
+---
 
-```text
-edit
- ↓
-git add .
- ↓
-nix flake check
- ↓
-nixos-rebuild build
- ↓
-nixos-rebuild switch
- ↓
-test
- ↓
-commit
- ↓
-push
+# Rebuild helper
+
+`scripts/rebuild.sh` determines the target from:
+
+```bash
+hostname
 ```
 
-Local aliases may provide shortcuts for some of these commands, but the full commands above are the canonical workflow.
+For example, on the work laptop:
+
+```text
+work-laptop-nixos
+```
+
+automatically maps to:
+
+```text
+.#work-laptop-nixos
+```
+
+The script also checks that:
+
+```text
+hosts/<hostname>/configuration.nix
+```
+
+actually exists before rebuilding.
+
+Commands:
+
+```bash
+./scripts/rebuild.sh check
+./scripts/rebuild.sh build
+./scripts/rebuild.sh switch
+./scripts/rebuild.sh boot
+```
+
+Zsh provides convenient wrappers:
+
+```bash
+rebuild-check
+rebuild-test
+rebuild
+rebuild-boot
+```
+
+This avoids hardcoding a particular machine into aliases.
 
 ---
 
-# Riskier system changes
+# Installing NixOS on a new machine
 
-For ordinary package or user-configuration changes, `switch` is generally appropriate.
+There are two separate situations:
 
-For changes involving things such as:
+1. a normal fresh installation;
+2. an unusual machine with an existing multiboot/ZFS/encrypted storage setup.
+
+Do not treat them the same.
+
+---
+
+# Normal fresh installation
+
+## 1. Boot the NixOS installer
+
+Boot the NixOS ISO in UEFI mode.
+
+For an ordinary laptop with no special existing disk requirements, perform a normal NixOS installation first.
+
+Do not try to use this repository before proving that the basic installation can boot.
+
+The initial installation only needs to provide:
+
+```text
+working bootloader
+working filesystem
+working user
+working network
+```
+
+The repository will replace the rest afterward.
+
+---
+
+## 2. Boot the installed system
+
+Boot the newly installed NixOS system normally.
+
+Confirm:
+
+```bash
+hostname
+```
+
+and:
+
+```bash
+ip addr
+```
+
+Make sure networking works.
+
+---
+
+## 3. Obtain Git
+
+If Git is not installed yet:
+
+```bash
+nix-shell -p git
+```
+
+---
+
+## 4. Clone this repository
+
+SSH:
+
+```bash
+git clone git@github.com:EStroiu/nix-os-setup.git ~/nixos-config
+```
+
+If SSH authentication has not been configured yet, HTTPS can be used temporarily.
+
+Enter the repo:
+
+```bash
+cd ~/nixos-config
+```
+
+---
+
+## 5. Create the new host
+
+Choose the final hostname first.
+
+Example:
+
+```text
+new-laptop-nixos
+```
+
+Run:
+
+```bash
+./scripts/new-host.sh new-laptop-nixos
+```
+
+The script creates:
+
+```text
+hosts/new-laptop-nixos/
+├── configuration.nix
+└── hardware-configuration.nix
+```
+
+`hardware-configuration.nix` is copied from the newly installed machine.
+
+Never copy another computer's `hardware-configuration.nix`.
+
+---
+
+## 6. Edit the host configuration
+
+Open:
+
+```bash
+nano hosts/new-laptop-nixos/configuration.nix
+```
+
+The generated skeleton already imports:
+
+```nix
+./hardware-configuration.nix
+../../modules/laptop.nix
+```
+
+and sets the hostname.
+
+Now copy/adapt only the machine-specific parts of:
+
+```text
+/etc/nixos/configuration.nix
+```
+
+Typical examples are:
 
 ```text
 bootloader
-display/login manager
-critical networking
-filesystem configuration
-early boot
+EFI mount settings
+filesystem/storage settings
+hardware-specific settings
 ```
 
-prefer building first:
+Do not copy generic desktop/user configuration from `/etc/nixos/configuration.nix`.
 
-```sh
-sudo nixos-rebuild build --flake .#<host>
-```
-
-For changes that should only become active on the next boot:
-
-```sh
-sudo nixos-rebuild boot --flake .#<host>
-```
-
-Then reboot manually.
-
-This avoids replacing critical parts of the currently running graphical or system session unnecessarily.
+That functionality comes from the shared modules.
 
 ---
 
-# Updating the system
+## 7. Add the host to the flake
 
-Updates are intentional rather than silently changing the flake inputs.
+Open:
 
-Start from a clean or understood Git state:
-
-```sh
-git status
+```bash
+nano flake.nix
 ```
 
-Update the inputs:
+Add:
 
-```sh
-nix flake update
+```nix
+new-laptop-nixos = mkHost "new-laptop-nixos";
 ```
 
-Inspect what changed:
+under:
 
-```sh
-git diff flake.lock
+```nix
+nixosConfigurations
 ```
 
-Stage the updated lock file and any related configuration:
+---
 
-```sh
+## 8. Stage the new host
+
+```bash
 git add .
 ```
 
-Check:
+---
 
-```sh
+## 9. Validate
+
+```bash
 nix flake check
 ```
 
-Build:
+Then build the new host:
 
-```sh
-sudo nixos-rebuild build --flake .#<host>
+```bash
+./scripts/rebuild.sh build
 ```
 
-Apply:
+Do not activate a configuration that fails to build.
 
-```sh
-sudo nixos-rebuild switch --flake .#<host>
+---
+
+## 10. Activate cautiously
+
+For the first conversion from the installer-generated configuration to this repository, prefer:
+
+```bash
+./scripts/rebuild.sh boot
 ```
 
-After confirming that the system works:
+Then reboot:
 
-```sh
-git commit -m "Update flake inputs"
+```bash
+sudo reboot
+```
+
+This leaves the currently running installation untouched and activates the new configuration on the next boot.
+
+---
+
+## 11. Verify the new system
+
+After reboot:
+
+```bash
+hostname
+```
+
+Verify the Home Manager activation:
+
+```bash
+systemctl status home-manager-remarka.service --no-pager
+```
+
+Check failed services:
+
+```bash
+systemctl --failed
+```
+
+Test the applications/environment you depend on.
+
+---
+
+## 12. Commit the host
+
+Once everything works:
+
+```bash
+cd ~/nixos-config
+
+git add .
+
+git commit -m "Add new-laptop-nixos"
+
 git push
 ```
 
-Do not increase `system.stateVersion` merely because NixOS or Home Manager was updated.
+The new machine is now reproducible from the repository.
+
+---
+
+# Complex storage / dual boot / ZFS machines
+
+Do not use a generic installation recipe for a machine that already contains:
+
+```text
+multiple operating systems
+ZFS pools
+ZFSBootMenu
+encrypted datasets
+unusual EFI layouts
+LVM
+custom partition layouts
+```
+
+In these cases:
+
+1. inspect the existing disk layout first;
+2. preserve the existing EFI partition unless there is a deliberate reason not to;
+3. establish a bootable minimal NixOS installation;
+4. create the host-specific storage and boot configuration;
+5. only then attach the shared `modules/laptop.nix` profile.
+
+The helper scripts deliberately do **not** modify partitions, encryption, ZFS pools or bootloaders.
+
+The work laptop is an example of this category.
+
+Its ZFS, encryption and boot settings remain under:
+
+```text
+hosts/work-laptop-nixos/
+```
+
+and are not shared with other machines.
+
+---
+
+# `hardware-configuration.nix`
+
+Every physical machine must have its own generated:
+
+```text
+hosts/<host>/hardware-configuration.nix
+```
+
+Do not copy this file between machines.
+
+It contains detected information such as:
+
+```text
+filesystem UUIDs
+filesystem types
+kernel modules
+CPU/platform defaults
+swap devices
+hardware detection
+```
+
+Treat it as machine-specific generated configuration.
 
 ---
 
 # `system.stateVersion`
 
-`system.stateVersion` records compatibility assumptions from when that particular NixOS installation was created.
+`system.stateVersion` is compatibility state for that installation.
 
-It is **not** the currently installed NixOS version.
+It is not simply the current NixOS release number.
 
-Do not change it during normal upgrades.
+Keep the value associated with the installation.
 
-For a newly installed machine, keep the value generated for that installation.
+Do not update it just because the flake inputs were updated.
 
-Home Manager's:
-
-```nix
-home.stateVersion
-```
-
-follows the same general principle.
+The same general rule applies to Home Manager's `home.stateVersion`.
 
 ---
 
-# Adding another machine
+# Updating dependencies
 
-The repository is intended to support multiple physical machines while reusing the same modules and user configuration.
+Check the current repository first:
 
-Assume the new machine will be called:
-
-```text
-new-laptop
-```
-
-Replace that example name with the actual hostname you want to use.
-
-## 1. Install NixOS normally
-
-Install NixOS on the new machine first.
-
-Confirm that it boots successfully with its generated `/etc/nixos/configuration.nix` and `/etc/nixos/hardware-configuration.nix`.
-
-Keep note of the generated:
-
-```nix
-system.stateVersion
-```
-
-for that machine.
-
-## 2. Get Git if necessary
-
-On a very fresh installation where Git is not yet installed:
-
-```sh
-nix-shell -p git
-```
-
-## 3. Clone the repository
-
-```sh
-git clone git@github.com:EStroiu/nix-os-setup.git ~/nixos-config
+```bash
 cd ~/nixos-config
+git status
 ```
 
-## 4. Create the host directory
+Update:
 
-```sh
-mkdir -p hosts/new-laptop
+```bash
+nix flake update
 ```
 
-## 5. Copy the new machine's hardware configuration
+Inspect:
 
-```sh
-sudo cp /etc/nixos/hardware-configuration.nix \
-  ~/nixos-config/hosts/new-laptop/hardware-configuration.nix
+```bash
+git diff flake.lock
 ```
 
-Fix ownership if needed:
+Validate:
 
-```sh
-sudo chown "$USER":"$(id -gn)" \
-  ~/nixos-config/hosts/new-laptop/hardware-configuration.nix
-```
-
-Never copy `hardware-configuration.nix` from an existing host.
-
-## 6. Create the host configuration
-
-The easiest starting point is usually the configuration of the most similar existing host:
-
-```sh
-cp hosts/<existing-host>/configuration.nix \
-   hosts/new-laptop/configuration.nix
-```
-
-Then review it carefully.
-
-At minimum, check:
-
-```text
-imports
-hostname
-bootloader
-username
-user groups
-login shell
-Home Manager user/path
-machine-specific drivers
-system.stateVersion
-```
-
-Set:
-
-```nix
-networking.hostName = "new-laptop";
-```
-
-Use the `system.stateVersion` from the newly installed machine rather than blindly copying another host's value.
-
-If the new machine uses a different username, create or adapt:
-
-```text
-home/<new-user>/
-```
-
-and update both the NixOS user declaration and Home Manager integration.
-
-## 7. Add the host to `flake.nix`
-
-Add another `nixosConfigurations` entry:
-
-```nix
-nixosConfigurations.new-laptop = nixpkgs.lib.nixosSystem {
-  system = "x86_64-linux";
-
-  modules = [
-    ./hosts/new-laptop/configuration.nix
-
-    home-manager.nixosModules.home-manager
-
-    {
-      home-manager.extraSpecialArgs = {
-        inherit inputs;
-      };
-    }
-  ];
-};
-```
-
-Use the architecture appropriate for the new machine.
-
-For example, an ARM machine may require:
-
-```nix
-system = "aarch64-linux";
-```
-
-instead of:
-
-```nix
-system = "x86_64-linux";
-```
-
-## 8. Stage the new files
-
-```sh
-git add .
-```
-
-This must happen before the flake can reliably see newly created files.
-
-## 9. Check the configuration
-
-If flakes are already enabled:
-
-```sh
+```bash
 nix flake check
 ```
 
-On a completely fresh system where they are not yet enabled:
+Build the current host:
 
-```sh
-nix --extra-experimental-features "nix-command flakes" flake check
-```
-
-## 10. Build the new host
-
-```sh
-sudo nixos-rebuild build \
-  --flake .#new-laptop \
-  --option experimental-features "nix-command flakes"
+```bash
+rebuild-test
 ```
 
 If successful:
 
-```sh
-sudo nixos-rebuild switch \
-  --flake .#new-laptop \
-  --option experimental-features "nix-command flakes"
+```bash
+rebuild
 ```
 
-Once the shared Nix configuration is active, flakes should be enabled declaratively and the extra option should no longer be necessary.
+Then commit:
 
-## 11. Reboot and verify
-
-After rebooting:
-
-```sh
-hostname
-```
-
-should return the new host name.
-
-Then verify the system normally before committing the new host.
-
-## 12. Commit
-
-```sh
-git add .
-git commit -m "Add new-laptop configuration"
+```bash
+git add flake.lock
+git commit -m "Update flake inputs"
 git push
 ```
 
 ---
 
-# Sharing configuration between machines
+# Adding software
 
-The point of the layout is to share only what is actually common.
+Decide whether the software belongs to the system or the user.
 
-A typical multi-host tree looks like:
+## User software
+
+Prefer:
 
 ```text
-hosts/
-├── laptop-a/
-│   ├── configuration.nix
-│   └── hardware-configuration.nix
-└── laptop-b/
-    ├── configuration.nix
-    └── hardware-configuration.nix
+home/remarka/home.nix
+```
 
+for programs used by the normal desktop user.
+
+This ensures every host gets the same user environment.
+
+## System software or services
+
+Use:
+
+```text
 modules/
-├── common.nix
-├── desktop.nix
-└── ...
-
-home/
-└── <user>/
-    └── ...
 ```
 
-The host files choose which reusable modules apply.
+when software is required system-wide or provides a system service.
 
-If two machines start accumulating the same large set of imports, it may eventually make sense to create a higher-level profile such as:
+## Machine-specific software
+
+Only put software in:
 
 ```text
-modules/profiles/laptop.nix
+hosts/<host>/
 ```
 
-Do this only after real duplication exists.
+when there is a real machine-specific reason.
 
-Avoid building abstractions for machines or use cases that do not yet exist.
+---
+
+# User configuration
+
+The shared Home Manager configuration lives at:
+
+```text
+home/remarka/home.nix
+```
+
+This is the main location for things such as:
+
+```text
+shell
+prompt
+terminal
+Git
+CLI tools
+applications
+cursor/theme
+aliases
+custom shell functions
+```
+
+Application-specific files may live beside it:
+
+```text
+home/remarka/<application>/
+```
+
+and be deployed through Home Manager.
+
+The repository should be the source of truth instead of manually editing generated files under `~/.config`.
 
 ---
 
 # Secrets
 
-Do not put plaintext secrets into Nix configuration.
+Do not store plaintext secrets in this repository.
 
 This includes:
 
 ```text
 SSH private keys
 VPN private keys
-Wi-Fi passwords
-API tokens
 passwords
+API keys
+tokens
 private certificates
-credentials
+Wi-Fi credentials
 ```
 
-Remember that values embedded into Nix derivations can end up in `/nix/store`, which is not an appropriate place for secrets.
+Do not rely on `.gitignore` as secret protection.
 
-For now, machine-local secrets may remain outside the repository, for example under:
+Values embedded in Nix expressions may become available in the Nix store.
+
+Keep secrets outside the repository or use an encrypted Nix secret-management solution when needed.
+
+---
+
+# SSH keys
+
+SSH keys are currently machine-local.
+
+They normally live in:
 
 ```text
 ~/.ssh/
 ```
 
-or in locally managed network profiles.
+Recommended permissions:
 
-If reproducible secret management becomes necessary, use an encrypted secret-management solution such as `sops-nix` or `agenix`.
+```bash
+chmod 700 ~/.ssh
 
-`.gitignore` is not a security mechanism. A secret that has already been committed remains in Git history even if it is later ignored.
+chmod 600 ~/.ssh/id_ed25519
+chmod 600 ~/.ssh/id_rsa
+
+chmod 644 ~/.ssh/*.pub
+chmod 644 ~/.ssh/known_hosts
+```
+
+Never commit private keys to this repository.
 
 ---
 
-# Generated and local files
+# Recovery
 
-Generated build outputs should not be tracked.
+Before large changes, commit the current working state:
 
-The repository `.gitignore` includes patterns such as:
-
-```text
-result
-result-*
+```bash
+git add .
+git commit -m "Known good configuration"
+git push
 ```
 
-A `result` symlink may still physically appear after:
+NixOS also retains system generations.
 
-```sh
-nixos-rebuild build
-```
+List them with:
 
-That is normal.
-
-If a generated file was tracked before being added to `.gitignore`, remove it from the Git index once:
-
-```sh
-git rm --cached result
-```
-
----
-
-# Rollback and recovery
-
-There are two separate recovery mechanisms.
-
-## NixOS generations
-
-List generations:
-
-```sh
+```bash
 nixos-rebuild list-generations
 ```
 
-If a newly activated system is broken, an older generation can be selected from the boot menu.
+If a new system does not boot correctly, select an older NixOS generation from the boot menu.
 
-A running machine can also be rolled back using the NixOS generation mechanisms.
-
-## Git history
-
-Git records the configuration source that produced those systems.
-
-Inspect recent commits:
-
-```sh
-git log --oneline
-```
-
-Inspect a previous version of a file:
-
-```sh
-git show <commit>:path/to/file
-```
-
-Git and NixOS generations solve different problems:
+Git and NixOS generations provide two different recovery mechanisms:
 
 ```text
-NixOS generations
-    quickly recover a previously built system
+Git
+    restores configuration source
 
-Git history
-    recover and understand previous source configuration
+NixOS generations
+    restore previously built systems
 ```
 
 Keep both.
 
 ---
 
-# Maintenance
+# Important design rules
 
-Automatic maintenance policy belongs in Nix configuration rather than being run ad hoc.
+Keep host configuration small.
 
-Examples include:
+If the same setting appears in multiple hosts, consider moving it to a shared module.
+
+Keep personal preferences in Home Manager.
+
+Do not copy `hardware-configuration.nix` between machines.
+
+Do not hardcode a hostname in shared shell commands.
+
+Do not put secrets in Nix expressions.
+
+Do not automate destructive storage operations merely for convenience.
+
+Prefer:
 
 ```text
-garbage collection
-store optimisation
-boot generation limits
+simple
+explicit
+shared where appropriate
+host-specific where necessary
 ```
 
-To inspect configured timers:
-
-```sh
-systemctl list-timers | grep nix
-```
-
-To list current NixOS generations:
-
-```sh
-nixos-rebuild list-generations
-```
-
-Exact retention periods and generation limits should be read from the configuration rather than duplicated in this README.
-
-That keeps the documentation valid if the policy changes.
+over abstraction for its own sake.
 
 ---
 
-# Useful inspection commands
+# Typical workflow
 
-Check the flake:
+For normal configuration work:
 
-```sh
+```bash
+cd ~/nixos-config
+
+# edit files
+
+git add .
+
+rebuild-check
+
+rebuild
+
+# test
+
+git add .
+git commit -m "Describe the change"
+git push
+```
+
+For a riskier boot/system change:
+
+```bash
+cd ~/nixos-config
+
+git add .
+
+rebuild-check
+
+rebuild-boot
+
+sudo reboot
+```
+
+For a new machine:
+
+```text
+install plain NixOS
+        ↓
+boot it successfully
+        ↓
+clone repository
+        ↓
+scripts/new-host.sh <hostname>
+        ↓
+add machine-specific boot/storage configuration
+        ↓
+add one mkHost line to flake.nix
+        ↓
+git add .
+        ↓
 nix flake check
+        ↓
+rebuild-test
+        ↓
+rebuild-boot
+        ↓
+reboot and verify
+        ↓
+commit + push
 ```
 
-Show flake inputs and resolved revisions:
+The repository should describe the desired system state.
 
-```sh
-nix flake metadata
-```
+The Nix files document **what the machines run**.
 
-Build without activation:
-
-```sh
-sudo nixos-rebuild build --flake .#<host>
-```
-
-Apply a configuration:
-
-```sh
-sudo nixos-rebuild switch --flake .#<host>
-```
-
-Install it for the next boot:
-
-```sh
-sudo nixos-rebuild boot --flake .#<host>
-```
-
-List generations:
-
-```sh
-nixos-rebuild list-generations
-```
-
-See Git changes:
-
-```sh
-git status
-git diff
-git diff --cached
-```
-
-Check whether a file is ignored:
-
-```sh
-git check-ignore -v <file>
-```
-
-Show the currently configured login shell:
-
-```sh
-getent passwd "$USER" | cut -d: -f7
-```
-
----
-
-# Design principles
-
-The repository follows a few simple rules.
-
-**Prefer explicit configuration over clever abstraction.**
-
-A host should be understandable by opening its `configuration.nix` and following its imports.
-
-**Keep host-specific state with the host.**
-
-Hardware, hostname, disks and other physical-machine details should not leak into shared modules.
-
-**Share capabilities, not accidents.**
-
-Move something to `modules/` because multiple machines should use it, not merely because the file is getting long.
-
-**Keep user preferences out of system modules when possible.**
-
-Applications, dotfiles and personal preferences belong in Home Manager.
-
-**Let Git and `flake.lock` define the known-good source state.**
-
-Test changes before committing them, and commit working configurations frequently.
-
-**Do not duplicate volatile details in documentation.**
-
-Package lists, exact shortcuts, themes, application choices and maintenance values should be read from the configuration itself.
-
-The README documents **how the repository works**. The Nix files document **what the machines currently run**.
+This README documents **how the configuration is structured and maintained**.
