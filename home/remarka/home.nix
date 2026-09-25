@@ -231,8 +231,14 @@ in
 
   programs.git = {
     enable = true;
-  };
 
+    settings = {
+      user = {
+        name = "EStroiu";
+        email = "e.stroiu@vu.nl";
+      };
+    };
+  };
 
   # ============================================================
   # Niri / desktop

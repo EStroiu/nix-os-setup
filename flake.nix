@@ -28,5 +28,21 @@
         }
       ];
     };
+
+    nixosConfigurations.work-laptop-nixos = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      
+      modules = [
+        ./hosts/work-laptop-nixos/configuration.nix
+
+        home-manager.nixosModules.home-manager
+
+        {
+          home-manager.extraSpecialArgs = {
+            inherit inputs;
+          };
+        }
+      ];
+    };
   };
 }
