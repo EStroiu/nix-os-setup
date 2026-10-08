@@ -298,6 +298,7 @@ in
 
     #Work Software
     dbeaver-bin
-
+    brave
+    vscode
   ];
 }
