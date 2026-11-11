@@ -22,7 +22,18 @@
 
     shell = pkgs.zsh;
   };
-
+  
+  # DisplayLink support
+  nixpkgs.config.allowUnfree = true;
+  
+  services.xserver.videoDrivers = [
+    "displaylink"
+  ];
+  
+  environment.systemPackages = with pkgs; [
+    displaylink
+  ];
+  
   # Zsh needs to exist as an allowed login shell.
   programs.zsh.enable = true;
 
